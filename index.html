@@ -1,0 +1,1413 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#FAF9F5">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>出发了么 · 福建六日亲子慢行</title>
+<style>
+/* ============================================================
+   出发了么 · 通用旅行攻略页
+   设计基调：清新绿 · 治愈高级（低饱和莫兰迪绿 + 奶白）
+   ============================================================ */
+
+:root{
+  --green-deep:#2F5D50;   /* 深绿：标题、强调文字 */
+  --green-main:#6B9E86;   /* 主色：按钮、选中态、时间轴节点 */
+  --green-soft:#A8C4B4;   /* 浅绿：次级元素、分隔线 */
+  --green-mist:#E8F0EB;   /* 极浅绿：卡片底、标签底 */
+  --cream:#FAF9F5;        /* 奶白：页面背景 */
+  --wood:#C9A87C;         /* 暖木色：点缀、数字、图标 */
+  --text-main:#2A3B34;    /* 主文字 */
+  --text-sub:#7A8B83;     /* 次级文字 */
+  --shadow:0 2px 16px rgba(47,93,80,.06);
+  --line:rgba(168,196,180,.4);   /* 分隔线 = --green-soft 40% 透明 */
+  --nav-h:52px;
+}
+
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;padding:0}
+body{
+  background:var(--cream);
+  color:var(--text-main);
+  font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Noto Sans SC","Microsoft YaHei",sans-serif;
+  font-size:15px;line-height:1.62;
+  -webkit-font-smoothing:antialiased;
+  /* 底部留出 tabbar + 刘海屏安全区 */
+  padding-bottom:calc(84px + env(safe-area-inset-bottom));
+}
+button{font-family:inherit;cursor:pointer;border:0;background:none;color:inherit;font-size:15px}
+input{font-family:inherit;font-size:15px}
+a{color:inherit;text-decoration:none}
+img{display:block}
+
+.app{max-width:430px;margin:0 auto;position:relative;overflow:hidden;min-height:100vh}
+
+/* ---------- 顶部导航栏（初始透明叠加在图片上，滚动后奶白+模糊） ---------- */
+.nav{
+  position:fixed;top:0;left:0;right:0;max-width:430px;margin:0 auto;z-index:50;
+  height:calc(var(--nav-h) + env(safe-area-inset-top));
+  padding:env(safe-area-inset-top) 18px 0;
+  display:flex;align-items:center;gap:8px;
+  background:transparent;
+  transition:background .32s ease, box-shadow .32s ease, -webkit-backdrop-filter .32s ease;
+}
+.nav.solid{
+  background:rgba(250,249,245,.82);
+  -webkit-backdrop-filter:saturate(180%) blur(14px);
+  backdrop-filter:saturate(180%) blur(14px);
+  box-shadow:0 1px 0 var(--line);
+}
+.nav-brand{display:flex;align-items:center;gap:7px;opacity:0;transform:translateY(4px);transition:opacity .3s,transform .3s}
+.nav.solid .nav-brand{opacity:1;transform:none}
+.nav-brand b{font-size:16px;color:var(--green-deep);letter-spacing:.5px}
+.nav-brand em{font-style:normal;font-size:12px;color:var(--text-sub)}
+.nav-logo{width:26px;height:26px;border-radius:9px;background:linear-gradient(135deg,var(--green-soft),var(--green-main));
+  display:flex;align-items:center;justify-content:center;font-size:14px;box-shadow:var(--shadow)}
+
+/* ---------- 顶部 Hero：标题 + 城市网图卡片 ---------- */
+.hero{position:relative;padding:calc(env(safe-area-inset-top) + 62px) 0 4px;overflow:hidden}
+.hero-deco{position:absolute;top:0;left:0;width:100%;height:100%;opacity:.05;pointer-events:none}
+.hero-inner{position:relative;padding:0 18px}
+.big-title{display:flex;align-items:center;gap:10px}
+.big-title h1{margin:0;font-size:31px;font-weight:800;color:var(--green-deep);letter-spacing:1.5px}
+.big-title .leaf{font-size:22px;transform:rotate(-12deg)}
+.sub-title{margin:7px 0 0;font-size:13.5px;color:var(--text-sub);line-height:1.55}
+.sub-title b{color:var(--green-deep);font-weight:600}
+.meta-row{display:flex;flex-wrap:wrap;gap:7px;margin-top:11px}
+.meta-chip{background:var(--green-mist);color:var(--green-deep);font-size:12.5px;padding:5px 11px;border-radius:999px;font-weight:500}
+.meta-chip i{font-style:normal;color:var(--wood)}
+
+/* 城市横向滑动卡片 */
+.cities{
+  display:flex;gap:12px;overflow-x:auto;scroll-snap-type:x mandatory;
+  padding:14px 18px 10px;-webkit-overflow-scrolling:touch;scrollbar-width:none;
+}
+.cities::-webkit-scrollbar{display:none}
+.city-card{
+  flex:0 0 min(78vw,320px);height:202px;position:relative;border-radius:20px;overflow:hidden;
+  scroll-snap-align:start;box-shadow:var(--shadow);border:0;padding:0;display:block;
+}
+.city-fallback{position:absolute;inset:0}
+.city-fallback svg{position:absolute;left:0;bottom:0;width:100%;height:46%}
+.city-img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0;transition:opacity .5s ease;background:transparent}
+.city-img.loaded{opacity:1}
+.city-mask{position:absolute;inset:0;background:linear-gradient(to top,rgba(47,93,80,.85) 0%,rgba(47,93,80,.35) 42%,transparent 72%)}
+.city-info{position:absolute;left:16px;right:16px;bottom:14px;text-align:left}
+.city-info .daytag{display:inline-block;font-size:11px;color:#fff;background:rgba(255,255,255,.22);
+  border:1px solid rgba(255,255,255,.35);border-radius:999px;padding:2px 9px;margin-bottom:6px}
+.city-info .cname{font-size:20px;font-weight:700;color:#fff;letter-spacing:1px;line-height:1.2}
+.city-info .ctag{font-size:13px;color:rgba(255,255,255,.8);margin-top:3px}
+.dots{display:flex;gap:6px;justify-content:center;align-items:center;padding:2px 0 12px}
+.dot{width:6px;height:6px;border-radius:999px;background:var(--green-soft);opacity:.5;transition:all .3s ease}
+.dot.on{width:18px;background:var(--green-deep);opacity:1}
+
+/* ---------- 通用卡片 ---------- */
+.panel{display:none;padding:4px 18px 20px}
+.panel.active{display:block;animation:fadeUp .34s cubic-bezier(.2,.7,.3,1)}
+@keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+.card{background:#fff;border-radius:20px;box-shadow:var(--shadow);padding:16px;margin-bottom:14px}
+.card.mist{background:var(--green-mist)}
+.card-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:12px}
+.card-head h3{margin:0;font-size:16px;font-weight:700;color:var(--green-deep);display:flex;align-items:center;gap:7px}
+.card-head .hint{font-size:12px;color:var(--text-sub);font-weight:400}
+.sec-title{font-size:13px;font-weight:600;color:var(--green-main);letter-spacing:.5px;margin:14px 0 8px;display:flex;align-items:center;gap:6px}
+.sec-title:first-child{margin-top:0}
+
+/* 行程信息卡 */
+.info-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px 10px}
+.info-item .k{font-size:12px;color:var(--text-sub);display:flex;align-items:center;gap:5px}
+.info-item .v{font-size:14.5px;color:var(--green-deep);font-weight:600;margin-top:2px;line-height:1.45}
+.info-item.full{grid-column:1/-1}
+
+/* ---------- Tab1 准备清单 ---------- */
+.prog-row{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:9px}
+.prog-row .num{font-size:14px;color:var(--text-sub)}
+.prog-row .num b{font-size:20px;color:var(--green-deep);font-weight:700}
+.link-btn{font-size:13px;color:var(--text-sub);padding:6px 10px;border-radius:999px;min-height:44px;
+  display:inline-flex;align-items:center;background:rgba(255,255,255,.6)}
+.link-btn:active{background:var(--green-mist)}
+.bar{height:6px;background:#fff;border-radius:999px;overflow:hidden}
+.bar i{display:block;height:100%;width:0;background:var(--green-main);border-radius:999px;transition:width .4s cubic-bezier(.2,.8,.2,1)}
+
+.group{border-top:1px solid var(--line)}
+.group:first-child{border-top:0}
+.group-head{display:flex;align-items:center;gap:10px;width:100%;min-height:52px;padding:4px 0;text-align:left}
+.group-head .gicon{font-size:17px;width:26px;text-align:center}
+.group-head .gname{flex:1;font-size:15px;font-weight:600;color:var(--text-main)}
+.group-head .gcount{font-size:12px;color:var(--text-sub)}
+.group-head .chev{font-size:11px;color:var(--green-soft);transition:transform .28s ease}
+.group.collapsed .chev{transform:rotate(-90deg)}
+.group-body{overflow:hidden}
+.group.collapsed .group-body{display:none}
+.item{display:flex;align-items:flex-start;gap:11px;min-height:44px;padding:5px 0}
+.box{
+  width:22px;height:22px;flex:0 0 auto;margin-top:2px;border-radius:50%;
+  border:1.6px solid var(--green-soft);background:#fff;position:relative;transition:.22s ease;
+}
+.item.done .box{background:var(--green-main);border-color:var(--green-main)}
+.box::after{
+  content:"";position:absolute;left:7px;top:3.5px;width:5px;height:9px;
+  border:2px solid #fff;border-top:0;border-left:0;transform:rotate(42deg) scale(0);opacity:0;
+}
+.item.done .box::after{animation:pop .3s cubic-bezier(.34,1.6,.64,1) forwards}
+@keyframes pop{0%{transform:rotate(42deg) scale(0);opacity:0}60%{transform:rotate(42deg) scale(1.25);opacity:1}100%{transform:rotate(42deg) scale(1);opacity:1}}
+.txt{flex:1;font-size:15px;line-height:1.5;word-break:break-word}
+.txt small{display:block;font-size:12.5px;color:var(--text-sub);margin-top:1px}
+.item.done .txt{text-decoration:line-through;color:var(--text-sub)}
+.del{width:44px;height:44px;flex:0 0 auto;display:flex;align-items:center;justify-content:center;
+  color:var(--green-soft);font-size:18px;margin-top:-11px}
+.del:active{color:var(--green-deep)}
+.add-row{display:flex;gap:6px;align-items:center;padding:2px 0 10px}
+.add-row input{flex:1;height:44px;border:0;border-radius:999px;background:var(--green-mist);
+  padding:0 15px;color:var(--text-main);outline:none;min-width:0}
+.add-row input::placeholder{color:var(--text-sub)}
+.add-row button{width:44px;height:44px;flex:0 0 auto;border-radius:50%;background:var(--green-main);
+  color:#fff;font-size:21px;display:flex;align-items:center;justify-content:center;line-height:1}
+.add-row button:active{transform:scale(.94)}
+
+/* ---------- Tab2 路线地图 ---------- */
+.map-inner{position:relative;width:100%;aspect-ratio:420/540;border-radius:16px;overflow:hidden;background:#FCFDFC}
+.map-inner svg.map-svg{position:absolute;inset:0;width:100%;height:100%}
+.layer{position:absolute;inset:0}
+#amapBox{width:100%;height:420px;display:none}
+#amapBox.on{display:block}
+.node{position:absolute;transform:translate(-50%,-50%);display:flex;flex-direction:column;align-items:center;
+  background:none;padding:0;min-height:0}
+.node .dot{width:30px;height:30px;border-radius:50%;background:#fff;border:2.5px solid var(--green-main);
+  display:flex;align-items:center;justify-content:center;font-size:13px;box-shadow:var(--shadow);transition:.25s}
+.node .lbl{margin-top:5px;font-size:12.5px;color:var(--green-deep);font-weight:600;background:rgba(255,255,255,.86);
+  padding:1px 7px;border-radius:999px;white-space:nowrap}
+.node.on .dot{background:var(--green-main);color:#fff;transform:scale(1.12)}
+.badge{position:absolute;transform:translate(-50%,-50%);display:flex;flex-direction:column;align-items:center;background:none;padding:0}
+.badge .cir{width:38px;height:38px;border-radius:50%;background:var(--green-mist);border:1.5px solid var(--green-soft);
+  display:flex;align-items:center;justify-content:center;font-size:17px;box-shadow:var(--shadow)}
+.badge .t{margin-top:2px;font-size:11px;color:var(--green-deep);background:rgba(255,255,255,.9);
+  padding:1px 7px;border-radius:999px;white-space:nowrap}
+.map-tip{font-size:12px;color:var(--text-sub);margin-top:9px;text-align:center}
+.bubble{position:absolute;transform:translate(-50%,-100%);background:#fff;border-radius:14px;box-shadow:0 8px 26px rgba(47,93,80,.16);
+  padding:11px 13px;width:186px;text-align:left;display:none;z-index:5}
+.bubble.on{display:block;animation:fadeUp .22s ease}
+.bubble b{font-size:13.5px;color:var(--green-deep);display:flex;align-items:center;gap:5px}
+.bubble p{margin:5px 0 0;font-size:12.5px;color:var(--text-sub);line-height:1.55}
+.bubble::after{content:"";position:absolute;left:50%;bottom:-6px;width:12px;height:12px;background:#fff;
+  transform:translateX(-50%) rotate(45deg);box-shadow:3px 3px 8px rgba(47,93,80,.05)}
+.route-flow{stroke:var(--green-main);stroke-width:3;fill:none;stroke-linecap:round;
+  stroke-dasharray:9 9;animation:flow 1.4s linear infinite}
+@keyframes flow{to{stroke-dashoffset:-36}}
+
+.city-detail .cd-head{display:flex;align-items:baseline;gap:9px;margin-bottom:10px}
+.city-detail .cd-name{font-size:19px;font-weight:700;color:var(--green-deep)}
+.city-detail .cd-stay{font-size:12.5px;color:var(--text-sub)}
+.sight-list{list-style:none;margin:0;padding:0}
+.sight-list li{position:relative;padding:5px 0 5px 15px;font-size:14.5px;line-height:1.55}
+.sight-list li::before{content:"";position:absolute;left:2px;top:13px;width:6px;height:6px;border-radius:50%;background:var(--green-soft)}
+.sight-list li b{font-weight:600}
+.sight-list li span{color:var(--text-sub);font-size:12.5px;display:block}
+/* 有坐标的地点：整行可点，唤起高德地图 */
+.sight-list li.tappable{background:var(--green-mist);border-radius:14px;padding:9px 11px;margin:6px 0;
+  display:flex;flex-wrap:wrap;align-items:center;gap:4px}
+.sight-list li.tappable::before{display:none}
+.sight-list li.tappable>.d{display:block;width:100%}
+.sight-row .pin{font-size:12px;display:inline;color:inherit}
+.poi-go{display:inline-flex;align-items:center;gap:2px;background:var(--green-main);color:#fff;
+  font-size:12px;font-weight:500;padding:3px 10px;border-radius:999px;min-height:28px;margin-left:auto}
+.poi-go:active{background:var(--green-deep)}
+
+/* ---------- 大众点评胶囊按钮 ---------- */
+.pill-wrap{display:inline-flex;align-items:center;gap:4px;vertical-align:middle}
+.pill{display:inline-flex;align-items:center;gap:3px;background:var(--green-mist);color:var(--green-deep);
+  font-size:13.5px;padding:4px 9px 4px 11px;border-radius:999px;min-height:30px;font-weight:500}
+.pill:active{background:var(--green-soft);color:#fff}
+.pill .arw{font-size:13px;opacity:.55}
+.pill-i{width:20px;height:20px;display:inline-flex;align-items:center;justify-content:center;
+  font-size:11px;color:var(--green-soft);border:1px solid var(--line);border-radius:50%;flex:0 0 auto}
+.eat-row{margin-top:13px;padding-top:11px;border-top:1px dashed var(--line)}
+.eat-row .tip{font-size:12px;color:var(--text-sub);margin-bottom:7px}
+
+/* ---------- Tab3 时间轴 ---------- */
+.tl{position:relative;padding-left:28px}
+.tl::before{content:"";position:absolute;left:8px;top:8px;bottom:8px;width:1.5px;background:var(--green-soft);opacity:.55}
+.tl-item{position:relative;margin-bottom:12px}
+.tl-item::before{content:"";position:absolute;left:-25px;top:22px;width:11px;height:11px;border-radius:50%;
+  background:var(--green-main);box-shadow:0 0 0 3.5px var(--cream)}
+.tl-card{background:var(--cream);border-radius:20px;box-shadow:var(--shadow);overflow:hidden}
+.tl-head{display:flex;align-items:center;gap:10px;width:100%;text-align:left;padding:14px 15px;min-height:60px}
+.tl-day{font-size:12px;color:var(--wood);font-weight:700;letter-spacing:.6px;min-width:38px}
+.tl-mid{flex:1;min-width:0}
+.tl-city{font-size:15.5px;font-weight:700;color:var(--green-deep);display:flex;align-items:center;gap:6px}
+.tl-city small{font-weight:400;font-size:12px;color:var(--text-sub)}
+.tl-theme{font-size:12.5px;color:var(--text-sub);margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tl-chev{font-size:11px;color:var(--green-soft);transition:transform .28s ease;flex:0 0 auto}
+.tl-item.open .tl-chev{transform:rotate(90deg)}
+.tl-body{display:none;padding:0 15px 15px}
+.tl-item.open .tl-body{display:block;animation:fadeUp .3s ease}
+.block{margin-top:12px}
+.block .lb{display:inline-flex;align-items:center;gap:5px;font-size:12.5px;font-weight:600;color:var(--green-main);
+  background:var(--green-mist);border-radius:999px;padding:3px 10px}
+.block ul{margin:7px 0 0;padding:0 0 0 4px;list-style:none}
+.block li{position:relative;padding:3px 0 3px 14px;font-size:14.5px;line-height:1.6}
+.block li::before{content:"";position:absolute;left:2px;top:13px;width:5px;height:5px;border-radius:50%;background:var(--green-soft)}
+.tool-bar{display:flex;justify-content:flex-end;gap:8px;margin:0 0 12px}
+.tool-btn{font-size:13px;color:var(--green-deep);background:#fff;border-radius:999px;padding:0 14px;min-height:44px;
+  box-shadow:var(--shadow);display:inline-flex;align-items:center;gap:5px}
+
+/* 行程一览列表 */
+.day-row{display:flex;align-items:center;gap:11px;padding:11px 0;border-top:1px solid var(--line);width:100%;text-align:left}
+.day-row:first-child{border-top:0}
+.day-row .d{font-size:12.5px;color:var(--wood);font-weight:700;min-width:34px}
+.day-row .c{font-size:14.5px;font-weight:600;color:var(--green-deep);min-width:34px}
+.day-row .t{flex:1;font-size:13px;color:var(--text-sub);text-align:right}
+
+/* ---------- 底部 Tab ---------- */
+.tabbar{
+  position:fixed;bottom:0;left:0;right:0;max-width:430px;margin:0 auto;z-index:60;display:flex;
+  background:rgba(250,249,245,.9);
+  -webkit-backdrop-filter:saturate(180%) blur(14px);backdrop-filter:saturate(180%) blur(14px);
+  border-top:1px solid var(--line);
+  padding:4px 6px calc(4px + env(safe-area-inset-bottom));
+}
+.tab{flex:1;height:52px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;
+  color:var(--text-sub);border-radius:14px;transition:color .25s}
+.tab .ico{font-size:19px;line-height:1}
+.tab .lb{font-size:13px;line-height:1.2}
+.tab.active{color:var(--green-deep)}
+.tab.active .ico{transform:translateY(-1px)}
+.tab.active .lb{font-weight:700}
+
+/* 底部选择面板（大众点评 App / 浏览器） */
+.sheet-mask{position:fixed;inset:0;z-index:300;display:none;align-items:flex-end;justify-content:center;
+  background:rgba(42,59,52,.32);-webkit-backdrop-filter:blur(2px);backdrop-filter:blur(2px)}
+.sheet-mask.on{display:flex;animation:fadeIn .2s ease}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+.sheet{width:100%;max-width:430px;background:var(--cream);border-radius:22px 22px 0 0;
+  padding:20px 18px calc(14px + env(safe-area-inset-bottom));
+  animation:sheetUp .26s cubic-bezier(.2,.8,.2,1)}
+@keyframes sheetUp{from{transform:translateY(24px);opacity:.5}to{transform:none;opacity:1}}
+.sheet .s-title{font-size:17px;font-weight:700;color:var(--green-deep);text-align:center;line-height:1.4}
+.sheet .s-tip{font-size:12.5px;color:var(--text-sub);text-align:center;margin:6px 0 15px}
+.s-btn{display:flex;align-items:center;justify-content:center;width:100%;min-height:50px;border-radius:999px;
+  font-size:15.5px;font-weight:600;background:#fff;color:var(--green-deep);margin-bottom:9px;
+  box-shadow:var(--shadow);transition:transform .15s}
+.s-btn:active{transform:scale(.98)}
+.s-btn.primary{background:var(--green-main);color:#fff;box-shadow:0 4px 16px rgba(107,158,134,.3)}
+.s-btn.cancel{background:transparent;color:var(--text-sub);font-weight:500;box-shadow:none;margin-bottom:0}
+
+/* toast */
+.toast{position:fixed;left:50%;bottom:calc(96px + env(safe-area-inset-bottom));transform:translateX(-50%) translateY(10px);
+  background:rgba(47,93,80,.94);color:#fff;font-size:13.5px;padding:10px 16px;border-radius:999px;
+  opacity:0;pointer-events:none;transition:.28s ease;z-index:200;max-width:80vw;text-align:center}
+.toast.on{opacity:1;transform:translateX(-50%)}
+.foot{text-align:center;font-size:12px;color:var(--green-soft);padding:6px 0 16px}
+</style>
+</head>
+<body>
+
+<div class="app">
+
+  <!-- 顶部导航 -->
+  <header class="nav" id="nav">
+    <div class="nav-brand">
+      <span class="nav-logo">🌿</span>
+      <b>出发了么</b>
+      <em id="navSub"></em>
+    </div>
+  </header>
+
+  <!-- 顶部区域 -->
+  <div class="hero">
+    <!-- 极淡水波纹 / 叶脉装饰，透明度 5% -->
+    <svg class="hero-deco" viewBox="0 0 400 320" fill="none" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+      <defs>
+        <linearGradient id="lg" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0" stop-color="#2F5D50"/><stop offset="1" stop-color="#6B9E86"/>
+        </linearGradient>
+      </defs>
+      <g stroke="url(#lg)" stroke-width="1.2" stroke-linecap="round">
+        <path d="M-10 60 C 80 20, 150 100, 240 55 S 370 20, 410 70"/>
+        <path d="M-10 96 C 90 56, 160 136, 250 91 S 380 56, 410 106"/>
+        <path d="M-10 132 C 100 92, 170 172, 260 127 S 390 92, 410 142"/>
+        <path d="M60 260 C 90 200, 130 190, 150 240 M150 240 C 170 200, 210 200, 240 250"/>
+      </g>
+      <g stroke="url(#lg)" stroke-width="1.2">
+        <path d="M300 200 C 320 170, 360 175, 372 205 M330 178 C 336 168, 352 168, 358 178"/>
+      </g>
+    </svg>
+
+    <div class="hero-inner">
+      <div class="big-title"><h1>出发了么</h1><span class="leaf">🍃</span></div>
+      <p class="sub-title" id="heroSub"></p>
+      <div class="meta-row" id="metaRow"></div>
+    </div>
+
+    <div class="cities" id="cities"></div>
+    <div class="dots" id="dots"></div>
+  </div>
+
+  <!-- ================= Tab 1 · 别忘了 ================= -->
+  <main>
+  <section class="panel" id="panel-0">
+    <div class="card mist">
+      <div class="card-head"><h3>🧳 行程信息</h3></div>
+      <div class="info-grid" id="tripInfo"></div>
+    </div>
+
+    <div class="card">
+      <div class="prog-row">
+        <span class="num" id="progText">已完成 <b>0</b> / 0</span>
+        <button class="link-btn" id="resetBtn">重置勾选</button>
+      </div>
+      <div class="bar"><i id="progBar"></i></div>
+    </div>
+
+    <div class="card" id="checkRoot"></div>
+  </section>
+
+  <!-- ================= Tab 2 · 这样玩 ================= -->
+  <section class="panel" id="panel-1">
+    <div class="card">
+      <div class="card-head"><h3>🗺 路线地图</h3><span class="hint" id="mapMode"></span></div>
+      <div class="map-inner" id="mapInner">
+        <div id="amapBox"></div>
+        <div id="svgMap"></div>
+      </div>
+      <p class="map-tip">📍 城市圆点 = 城市，小绿点 = 景点，🏨 = 住宿；点任一个都能看地图<br>点交通工具徽章看班次详情</p>
+      <div style="text-align:center;margin-top:8px">
+        <button class="link-btn" id="mapToggle" hidden>⇄ 换成高德地图</button>
+      </div>
+    </div>
+
+    <div class="card city-detail" id="cityDetail"></div>
+
+    <div class="card">
+      <div class="card-head"><h3>📋 行程一览</h3><span class="hint">点任意一天可展开详情</span></div>
+      <div id="dayList"></div>
+    </div>
+  </section>
+
+  <!-- ================= Tab 3 · 行程总览 ================= -->
+  <section class="panel" id="panel-2">
+    <div class="tool-bar">
+      <button class="tool-btn" id="expandAll">⇱ 全部展开</button>
+      <button class="tool-btn" id="collapseAll">⇲ 全部折叠</button>
+    </div>
+    <div class="tl" id="timeline"></div>
+  </section>
+  </main>
+
+  <p class="foot">🌿 出发了么 · 慢慢走，好好玩</p>
+</div>
+
+<!-- 底部 Tab -->
+<nav class="tabbar" id="tabbar">
+  <button class="tab active" data-i="0"><span class="ico">🎒</span><span class="lb">别忘了</span></button>
+  <button class="tab" data-i="1"><span class="ico">🗺️</span><span class="lb">这样玩</span></button>
+  <button class="tab" data-i="2"><span class="ico">🕰️</span><span class="lb">行程总览</span></button>
+</nav>
+
+<!-- 点店名后弹出的选择面板（手机上用，避免 https 直跳被拦/落到登录页） -->
+<div class="sheet-mask" id="sheet">
+  <div class="sheet">
+    <div class="s-title"></div>
+    <p class="s-tip">唤起 App 需要在浏览器里打开本页<br>如果是在微信里看的，点右上角 ··· → 用浏览器打开</p>
+    <button class="s-btn primary" data-act="app">打开大众点评 App</button>
+    <button class="s-btn" data-act="amap">在高德地图里搜这家店</button>
+    <button class="s-btn cancel" data-act="cancel">取消</button>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* =========================================================================
+   第一部分：数据区 —— 想改行程，只改这一段就够了
+   ========================================================================= */
+
+/* ⚠️ 默认值说明（原文未提供，我按上下文补全，请按需修改）：
+   - TRIP.start     出发日期：原文未给 → 默认 2026-10-01，改这里即可，后面每天的日期会自动重算
+   - TRIP.people    出行人数：原文未给 → 根据「带孩子」「6 周岁以下儿童免票」推断为 2 大 1 小（没写具体年龄，需要的话自己补）
+   - TRIP.note      备注
+   - 各城市 / 各天的具体字段若为空数组，页面会自动隐藏对应区块，不会显示空白标题
+*/
+const TRIP = {
+  title: '出发了么',
+  sub:   '一次慢下来的福建亲子行 · 从<b>三坊七巷</b>的老榕，走到<b>鼓浪屿</b>的沙滩',
+  route: ['北京','福州','泉州','厦门','北京'],
+  days: 6,
+  start: '2026-10-01',            // ⚠️ 默认值：请改成真实出发日
+  people: '2 大 1 小',             // ⚠️ 默认值：原文未给人数，按「带孩子」推断，可自行修改
+  nights: '5 晚',
+  note: '整体节奏偏慢，每天留了午休时间给小朋友'
+};
+
+/* 城市网图：填了 URL 就用照片，留空 '' 自动用「渐变 + SVG 城市剪影」占位 */
+const CITY_IMAGES = {
+  '北京': '' ,
+  '福州': '' ,
+  '泉州': '' ,
+  '厦门': ''
+  // 例：'福州': 'https://你的图床/fuzhou.jpg'
+};
+
+/* 城市资料：lng/lat 用于地图（SVG 与高德共用），可以直接改经纬度
+   ⚠️ 景点坐标是我按大致位置填的（会有几百米误差），想精确一点就打开
+      高德坐标拾取器 https://lbs.amap.com/tools/picker 搜景点名，把 lng/lat 抄回来替换。
+      有 lng/lat 的景点才会在地图上打点、并且能唤起高德地图。 */
+const CITIES = [
+  {
+    name:'北京', tag:'出发地 · 飞向有福之州', stay:'出发地',
+    lng:116.41, lat:39.90,
+    note:'Day1 下午从北京起飞，落到福州长乐机场（约 2.5–3 小时）。建议提前 2 小时到机场。',
+    sights:[], eats:[], hotel:'',
+    alt:true                       // 标记为「只有交通、没有停留」的城市
+  },
+  {
+    name:'福州', tag:'有福之州 · 坊巷深处藏着老榕', stay:'Day1–Day3 · 2 晚',
+    lng:119.30, lat:26.07,
+    hotel:'福州三坊七巷三宝宾邸', hotelLL:[119.296, 26.088],
+    sights:[
+      {n:'三坊七巷', lng:119.296, lat:26.090, d:'衣锦坊、文儒坊慢慢逛，郎官巷 → 严复故居 → 小黄楼（园林式宅院），夜里看爱心树和老榕树根'},
+      {n:'福州熊猫世界', lng:119.330, lat:26.130, d:'2026 年 1 月焕新开园，全价票 50 元，6 周岁以下儿童免票，需提前预约'},
+      {n:'上下杭', lng:119.302, lat:26.068, d:'闽商发祥地，"福州传统商业博物馆"，古建筑保存完好，路面平整适合推车慢逛'},
+      {n:'烟台山', lng:119.303, lat:26.047, d:'傍晚去最好，一路文艺小店和咖啡馆，夜里灯亮起来很好看'}
+    ],
+    eats:[
+      {n:'同利肉燕老铺', d:'肉燕是福建省级非遗，燕皮薄如纸、肉馅鲜嫩'},
+      {n:'老福洲·三十年福州味', d:'荔枝肉酸甜开胃孩子爱吃，佛跳墙小份 88 元'},
+      {n:'聚春园大酒店', d:'佛跳墙制作技艺为国家非遗，正式吃一顿选这家'}
+    ]
+  },
+  {
+    name:'泉州', tag:'半城烟火半城仙 · 簪花与古寺', stay:'Day3–Day5 · 2 晚',
+    lng:118.58, lat:24.87,
+    hotel:'泉州市鲤楠舍民宿（西街开元寺店）', hotelLL:[118.583, 24.912],
+    sights:[
+      {n:'开元寺', lng:118.582, lat:24.913, d:'泉州最核心的世界遗产点，免费，带孩子看东西塔'},
+      {n:'西街', lng:118.579, lat:24.915, d:'白天吃小吃，晚上散步去莓超疯天台打卡双塔全景'},
+      {n:'蟳埔村', lng:118.670, lat:24.870, d:'体验簪花围，建议上午去，光线好人相对少'},
+      {n:'古城路线', lng:118.586, lat:24.908, d:'钟楼 → 中山路 → 承天禅寺 → 关岳庙 → 府文庙，顺手打卡书想所'}
+    ],
+    eats:[
+      {n:'张林姜母鸭', d:'面线糊清淡鲜香，配西街醋肉'},
+      {n:'阿牛泉牛馆', d:'牛三宝汤 + 咖喱牛排 + 手工牛肉丸，牛肚炖得软烂适合孩子'},
+      {n:'秉正堂四果汤', d:'走累了来一碗，配亚佛润饼'}
+    ]
+  },
+  {
+    name:'厦门', tag:'海上花园 · 琴岛、海风与环岛路', stay:'Day5–Day6 · 1 晚',
+    lng:118.09, lat:24.48,
+    hotel:'厦门·沐禾民宿（环岛南路音乐广场店）', hotelLL:[118.148, 24.455],
+    sights:[
+      {n:'鼓浪屿', lng:118.070, lat:24.447, d:'提前在「屿见厦门」小程序买船票（成人 35 元往返，3 岁免票），东渡客运码头 → 三丘田码头'},
+      {n:'菽庄花园', lng:118.068, lat:24.445, d:'钢琴博物馆 + 海边栈道，万国建筑群路线上的重点'},
+      {n:'大德记沙滩', lng:118.073, lat:24.443, d:'带娃挖沙玩水，记得带一套换洗衣物和挖沙工具'},
+      {n:'环岛路', lng:118.140, lat:24.452, d:'亲子骑行推荐玩月坡 → 黄厝段，海风一吹人就松了'}
+    ],
+    eats:[
+      {n:'林氏鱼丸', d:'龙头路小吃街，孩子也能吃'},
+      {n:'叶氏麻糍', d:'现打的糯叽叽'},
+      {n:'四里沙茶面', d:'离岛前最后一碗'}
+    ]
+  }
+];
+
+/* 城市之间的交通：badge 是在 SVG 地图中点上的圆形徽章 */
+const LINES = [
+  {from:'北京', to:'福州', icon:'✈️', text:'约 2.5–3 小时', times:'2.5-3h',
+   detail:'北京 → 福州长乐机场，飞行约 2.5–3 小时。落地后打车 / 网约车前往市区酒店，约 40–50 分钟。'},
+  {from:'福州', to:'泉州', icon:'🚄', text:'约 50 分钟–1 小时', times:'50-60min',
+   detail:'高铁福州 → 泉州，约 50 分钟–1 小时，班次很密，建议提前在 12306 购票选座。'},
+  {from:'泉州', to:'厦门', icon:'🚄', text:'约 18–43 分钟', times:'18-43min',
+   detail:'高铁泉州 → 厦门（注意终点是厦门站还是厦门北站），约 18–43 分钟，到站后打车去环岛南路民宿。'},
+  {from:'厦门', to:'北京', icon:'✈️', text:'约 3 小时', times:'3h',
+   detail:'Day6 下午飞回北京，厦门高崎机场出发，建议预留 2 小时到机场。'}   // ⚠️ 时长为默认值，请按实际航班改
+];
+
+/* ================= 准备清单（Tab1）=================
+   每个对象是一个分组，items 里的字符串可以直接写；
+   想加备注就写 "主标题|小字备注" */
+const CHECKLIST = [
+  { id:'doc', icon:'🎫', name:'证件与票务', items:[
+    '身份证（成人）',
+    '小朋友的户口本 / 身份证|坐高铁飞机都用得上',
+    '去程机票行程单|北京 → 福州长乐机场',
+    '返程机票行程单|厦门高崎 → 北京',
+    '福州 → 泉州高铁票|12306 提前买',
+    '泉州 → 厦门高铁票|注意终点站是厦门站还是厦门北站',
+    '鼓浪屿船票|「屿见厦门」小程序买，成人 35 元往返，3 岁免票',
+    '福州熊猫世界预约|2026 年 1 月焕新开园，需提前预约',
+    '三晚酒店确认单|福州 / 泉州 / 厦门'
+  ]},
+  { id:'cloth', icon:'👕', name:'衣物穿搭', items:[
+    '短袖换洗衣物|10 月福建白天还有 26℃ 上下',
+    '薄外套|飞机上和海边晚上会凉',
+    '舒适的步行鞋|三坊七巷、西街全靠走',
+    '遮阳帽 / 墨镜',
+    '玩沙的一套换洗衣物|大德记沙滩用得上',
+    '拖鞋|民宿里穿，也能直接去沙滩'
+  ]},
+  { id:'toilet', icon:'🧴', name:'洗漱与护肤', items:[
+    '防晒霜|海边紫外线强，记得补涂',
+    '驱蚊液|簪花围在村子里逛会用得上',
+    '湿巾 + 纸巾',
+    '常用护肤品',
+    '牙刷牙膏|多数民宿不提供一次性用品'
+  ]},
+  { id:'baby', icon:'🧸', name:'娃的专属', items:[
+    '轻便推车|上下杭、中山路这类平路推车很省力',
+    '儿童水杯 + 小包零食|高铁和飞机上救急',
+    '退热贴 + 儿童常用药',
+    '绘本书 / 小玩具|路上和午休后消磨时间',
+    '儿童遮阳帽',
+    '挖沙工具|自带的比岛上买的划算'
+  ]},
+  { id:'device', icon:'🔌', name:'电子设备', items:[
+    '充电宝|登机要求 ≤100Wh，别托运',
+    '多口充电头 + 数据线',
+    '相机 / 备用电池',
+    '耳机',
+    '提前下载离线地图和动画片'
+  ]},
+  { id:'health', icon:'💊', name:'药品健康', items:[
+    '肠胃药|海鲜多，备一点',
+    '晕车 / 晕船药|鼓浪屿船程用得上',
+    '创可贴 + 碘伏棉签',
+    '感冒药',
+    '口罩'
+  ]},
+  { id:'misc', icon:'✅', name:'出发前最后确认', items:[
+    '提前值机选座|带娃尽量选前排或连座',
+    '看一眼目的地天气',
+    '把行程告诉家里人',
+    '买好旅行保险',
+    '清空手机相册内存😂'
+  ]}
+];
+
+/* ================= 每天的行程（Tab2 一览 + Tab3 时间轴共用）=================
+   blocks = 上午 / 下午 / 晚上 三段，不用的直接删掉即可
+   eats   = 这一天的店，会自动渲染成大众点评胶囊按钮
+   date   = 留空就按 TRIP.start 自动推算；想写死就填 '10 月 3 日' 这种字符串
+*/
+const DAYS = [
+  {
+    n:1, city:'福州', theme:'抵达 + 三坊七巷夜游', trans:'✈️ 北京 → 福州',
+    blocks:[
+      {t:'下午', icon:'🛬', list:[
+        '从北京飞往福州长乐机场，飞行约 2.5–3 小时',
+        '落地后打车 / 网约车前往酒店，入住三坊七巷附近',
+        '放行李、洗把脸，慢慢走到坊巷里正好是傍晚'
+      ]},
+      {t:'晚上', icon:'🌙', list:[
+        '夜游三坊七巷：衣锦坊、文儒坊等小巷慢慢逛',
+        '打卡爱心树，看老榕树根，看真正的闽都风骨',
+        '推荐动线：郎官巷 → 严复故居 → 小黄楼（园林式宅院）'
+      ]}
+    ],
+    eats:[
+      {n:'同利肉燕老铺', d:'省级非遗肉燕，燕皮薄如纸、肉馅鲜嫩'},
+      {n:'永和鱼丸', d:'配一碗锅边糊，5 元/碗'}
+    ]
+  },
+  {
+    n:2, city:'福州', theme:'熊猫世界 + 上下杭 + 烟台山', trans:'🐼 福州市区',
+    blocks:[
+      {t:'上午', icon:'🐼', list:[
+        '去福州熊猫世界（2026 年 1 月焕新开园），带孩子看国宝',
+        '全价票 50 元，6 周岁以下儿童免票，务必提前预约'
+      ]},
+      {t:'下午', icon:'🏘', list:[
+        '午休后逛上下杭，闽商发祥地的老建筑群，适合推车慢逛',
+        '傍晚转场烟台山看夜景，一路文艺小店和咖啡馆'
+      ]},
+      {t:'晚上', icon:'🍜', list:[
+        '逛达明美食街：锅边糊、鱼丸、花生汤',
+        '回酒店休息，准备第二天去泉州'
+      ]}
+    ],
+    eats:[
+      {n:'老福洲·三十年福州味', d:'荔枝肉酸甜开胃孩子爱吃，佛跳墙小份 88 元'},
+      {n:'聚春园大酒店', d:'佛跳墙制作技艺为国家非遗，正式吃一顿选这家'}
+    ]
+  },
+  {
+    n:3, city:'泉州', theme:'高铁南下 + 开元寺 + 西街', trans:'🚄 福州 → 泉州',
+    blocks:[
+      {t:'上午', icon:'🚄', list:[
+        '福州坐高铁到泉州，约 50 分钟–1 小时',
+        '入住泉州鲤楠舍民宿（西街开元寺店），出门就是西街'
+      ]},
+      {t:'下午', icon:'🛕', list:[
+        '午休后参观开元寺（免费），泉州最核心的世界遗产点',
+        '沿着西街慢慢走，边走边吃'
+      ]},
+      {t:'晚上', icon:'🌃', list:[
+        '西街散步消食',
+        '去莓超疯天台打卡开元寺双塔全景，夜景值回票价'
+      ]}
+    ],
+    eats:[
+      {n:'张林姜母鸭', d:'面线糊清淡鲜香，配一份西街醋肉'},
+      {n:'秉正堂四果汤', d:'解腻解渴，配亚佛润饼当下午茶'},
+      {n:'亚佛润饼', d:'泉州润饼菜，孩子也爱吃'}
+    ]
+  },
+  {
+    n:4, city:'泉州', theme:'蟳埔簪花 + 古城深度游', trans:'🌸 泉州全天',
+    blocks:[
+      {t:'上午', icon:'🌸', list:[
+        '去蟳埔村体验簪花围，建议上午去，光线好人不挤',
+        '拍完照回市区，路上顺便看看洛阳桥一带的风景'
+      ]},
+      {t:'下午', icon:'🛕', list:[
+        '午休后古城路线：钟楼 → 中山路 → 承天禅寺 → 关岳庙 → 府文庙',
+        '打卡书想所，坐一会儿翻翻书'
+      ]},
+      {t:'晚上', icon:'🍲', list:[
+        '吃一顿热乎的沙茶火锅收尾',
+        '回酒店早点休息，明早要赶高铁去厦门'
+      ]}
+    ],
+    eats:[
+      {n:'阿牛泉牛馆', d:'牛三宝汤 + 咖喱牛排 + 手工牛肉丸，牛肚炖得软烂'},
+      {n:'茶滷道沙茶火锅', d:'泉州味的沙茶锅，收尾刚刚好'}
+    ]
+  },
+  {
+    n:5, city:'厦门', theme:'高铁到鹭岛 + 上鼓浪屿', trans:'🚄 泉州 → 厦门',
+    blocks:[
+      {t:'上午', icon:'🚄', list:[
+        '泉州坐高铁到厦门，约 18–43 分钟',
+        '入住厦门·沐禾民宿（环岛南路音乐广场店）',
+        '行李放好，查一眼当天船票时间'
+      ]},
+      {t:'下午', icon:'🏝', list:[
+        '提前在「屿见厦门」小程序买好船票（成人 35 元往返，3 岁免票）',
+        '东渡客运码头 → 三丘田码头上岛',
+        '走万国建筑群路线，菽庄花园（钢琴博物馆、海边栈道）必去',
+        '大德记沙滩挖沙玩水，记得带换洗衣物'
+      ]},
+      {t:'晚上', icon:'🚶', list:[
+        '龙头路小吃街解决晚饭',
+        '坐船回本岛逛中山路，早点回去休息'
+      ]}
+    ],
+    eats:[
+      {n:'林氏鱼丸', d:'龙头路小吃街，小孩也能吃'},
+      {n:'叶氏麻糍', d:'现打的糯叽叽'},
+      {n:'沈家肠粉', d:'清淡一份垫垫肚子'}
+    ]
+  },
+  {
+    n:6, city:'厦门', theme:'环岛路骑行 + 返程', trans:'✈️ 厦门 → 北京',
+    blocks:[
+      {t:'上午', icon:'🚲', list:[
+        '环岛路亲子骑行，推荐玩月坡 → 黄厝段',
+        '海风吹够了找个地方吃午饭'
+      ]},
+      {t:'下午', icon:'🛫', list:[
+        '整理行李，退房',
+        '前往厦门高崎机场，飞回北京',
+        '到家把照片导出来，这一趟就算圆满了'
+      ]}
+    ],
+    eats:[
+      {n:'四里沙茶面', d:'离岛前最后一碗，本地人的早午饭'}
+    ]
+  }
+];
+
+/* 高德地图 JS API 2.0 —— 没有 Key 时会自动降级到手绘 SVG 路线图（不影响使用） */
+const AMAP_KEY = '2afbbfa869c025e099693057f16b45b0';       // 高德 Web 端(JS API) Key
+const AMAP_SECURITY = 'c4b16d3d112cb7d72a36dd6a7e31da03'; // 安全密钥 securityJsCode（JS API 2.0 必填）
+/* ⚠️ 上面两个值必须放在英文单引号里面，改的时候别把引号删掉，否则整页 JS 会失效 */
+const MAP_TIMEOUT = 6000;   // 地图 6 秒内没渲染完就自动退回手绘图，避免白屏
+
+/* =========================================================================
+   第二部分：渲染逻辑（一般不需要改）
+   ========================================================================= */
+const $  = (s,r=document)=>r.querySelector(s);
+const $$ = (s,r=document)=>Array.from(r.querySelectorAll(s));
+const esc = s => String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+
+/* =========================================================================
+   跳转工具（定义在最前面，下面渲染时就要用到）
+   ========================================================================= */
+
+/* 1) 大众点评：胶囊按钮本身是 <a target="_blank">，走浏览器原生跳转。
+      之前把 window.open 放进 setTimeout，用户手势已失效，手机上会被弹窗拦截 → 点了没反应。 */
+const DP_BASE = 'https://www.dianping.com/search/keyword/0_0_';
+function dpLink(name){ return DP_BASE + encodeURIComponent(name); }
+
+/* 点评 App 的 URL Scheme：搜索店铺要用 searchshoplist（注意不是 shopinfo，
+   shopinfo 只接受店铺 id，传关键词是无效的） */
+function dpAppLink(name){ return 'dianping://searchshoplist?keyword=' + encodeURIComponent(name); }
+
+/* 手机上点店名时，先弹一个小面板让用户选「App」还是「浏览器」——
+   因为 https 链接在手机浏览器里经常被拦或落到登录页，直跳体验很差 */
+const SHOP_SHEET = true;
+function openShopSheet(name, city){
+  const m=$('#sheet');
+  if(!m) return;
+  m.dataset.shop=name; m.dataset.city=city||'';
+  m.querySelector('.s-title').textContent=name;
+  m.classList.add('on');
+}
+function dpSearch(name, city){
+  if(SHOP_SHEET && /iPhone|iPad|Android|Mobile/i.test(navigator.userAgent)){ openShopSheet(name,city); return; }
+  window.open(dpLink(name),'_blank','noopener');
+}
+
+/* 3) 高德地图「搜地点」：点评网页版在手机浏览器里经常被拦或落到登录页，
+      高德这条路已经验证能在这台手机上正常唤起，所以作为找餐厅的兜底方案。
+      https://lbs.amap.com/api/uri-api/guide/travel/poi-search */
+function amapSearchUrl(name, city){
+  return 'https://uri.amap.com/search?keyword='+encodeURIComponent(name)
+    +(city?'&city='+encodeURIComponent(city):'')
+    +'&view=map&src=chufalemo&coordinate=gaode&callnative=1';
+}
+function openAMapSearch(name, city){
+  toast('在高德地图里搜：'+name);
+  window.open(amapSearchUrl(name,city),'_blank','noopener');
+}
+
+/* 2) 高德地图：官方 URI API，装了 App 会直接唤起，没装就打开网页版高德
+      https://lbs.amap.com/api/uri-api/guide/travel/marker */
+function openAMap(lng, lat, name){
+  const url='https://uri.amap.com/marker?position='+lng+','+lat
+    +'&name='+encodeURIComponent(name)
+    +'&src=chufalemo&coordinate=gaode&callnative=1';
+  toast('正在打开高德地图：'+name);
+  window.open(url,'_blank','noopener');   /* 同步调用，保留用户手势 */
+}
+
+/* 日期：给 DAYS 里没写 date 的自动按 TRIP.start 推算 */
+function fmtDate(d){ return (d.getMonth()+1)+' 月 '+d.getDate()+' 日'; }
+function dayDate(i){
+  if(DAYS[i].date) return DAYS[i].date;
+  const d = new Date(TRIP.start+'T00:00:00');
+  d.setDate(d.getDate()+i);
+  return fmtDate(d);
+}
+const sDate = (()=>{const d=new Date(TRIP.start+'T00:00:00');return fmtDate(d)})();
+const eDate = (()=>{const d=new Date(TRIP.start+'T00:00:00');d.setDate(d.getDate()+TRIP.days-1);return fmtDate(d)})();
+
+/* toast 提示 */
+let toastTimer;
+function toast(msg){
+  const t=$('#toast'); t.textContent=msg; t.classList.add('on');
+  clearTimeout(toastTimer); toastTimer=setTimeout(()=>t.classList.remove('on'),2000);
+}
+
+/* ---------- 顶部信息 ---------- */
+$('#heroSub').innerHTML = TRIP.sub;
+$('#navSub').textContent = sDate + ' 出发 · ' + TRIP.days + ' 天';
+$('#metaRow').innerHTML = [
+  '<span class="meta-chip">📍 '+TRIP.route.join(' → ')+'</span>',
+  '<span class="meta-chip">🗓 '+TRIP.days+' 天 '+TRIP.nights+'</span>',
+  '<span class="meta-chip">👨‍👩‍👧 '+TRIP.people+'</span>',
+  '<span class="meta-chip">🍃 '+sDate+' — '+eDate+'</span>'
+].join('');
+$('#tripInfo').innerHTML = [
+  ['🧭','路线', TRIP.route.join(' → ')],
+  ['🗓','天数', TRIP.days+' 天 '+TRIP.nights],
+  ['👨‍👩‍👧','出行人数', TRIP.people],
+  ['🍃','出行时间', sDate+' — '+eDate]
+].map(x=>`<div class="info-item"><div class="k">${x[0]} ${x[1]}</div><div class="v">${esc(x[2])}</div></div>`).join('')
+ + `<div class="info-item full"><div class="k">💬 备注</div><div class="v">${esc(TRIP.note)}</div></div>`;
+
+/* ---------- 城市卡片：渐变 + SVG 剪影占位 ---------- */
+function gradient(i){
+  return [
+    'linear-gradient(160deg,#DCE6DE 0%,#9DBCAB 52%,#5E8C75 100%)',
+    'linear-gradient(160deg,#E4EDDF 0%,#A9C6B1 52%,#67957E 100%)',
+    'linear-gradient(160deg,#DEE8E3 0%,#9FBFB0 52%,#5C8C77 100%)',
+    'linear-gradient(160deg,#E8F0E6 0%,#B4CCBC 52%,#74A088 100%)'
+  ][i%4];
+}
+/* 用固定种子生成不同的天际线剪影，保证每个城市占位图都不一样 */
+function skyline(seed){
+  let s=seed*9301+49297, rand=()=>((s=(s*9301+49297)%233280)/233280);
+  let x=0,d='';
+  while(x<340){
+    const w=14+rand()*24, h=26+rand()*66, y=120-h;
+    d += `M${x.toFixed(1)} ${y.toFixed(1)}h${w.toFixed(1)}v${h.toFixed(1)}h-${w.toFixed(1)}z`;
+    if(rand()>0.55) d += `M${(x+w/2-3).toFixed(1)} ${(y-9).toFixed(1)}h6v9h-6z`;
+    x += w + 3 + rand()*7;
+  }
+  return `<svg viewBox="0 0 340 120" preserveAspectRatio="none"><path d="${d}" fill="#fff" opacity=".15"/></svg>`;
+}
+$('#cities').innerHTML = CITIES.map((c,i)=>{
+  const url = CITY_IMAGES[c.name];
+  const img = url ? `<img class="city-img" src="${esc(url)}" alt="${esc(c.name)}" loading="lazy"
+      onload="this.classList.add('loaded')" onerror="this.remove()">` : '';
+  return `<div class="city-card">
+    <div class="city-fallback" style="background:${gradient(i)}">${skyline(i+2)}</div>
+    ${img}
+    <div class="city-mask"></div>
+    <div class="city-info">
+      <div class="daytag">${esc(c.alt?'出发地':c.stay)}</div>
+      <div class="cname">${esc(c.name)}</div>
+      <div class="ctag">${esc(c.tag)}</div>
+    </div>
+  </div>`;
+}).join('');
+$('#dots').innerHTML = CITIES.map((_,i)=>`<span class="dot${i===0?' on':''}"></span>`).join('');
+
+/* 卡片滑动时切换下方指示点 */
+(function(){
+  const wrap=$('#cities'), dots=$$('#dots .dot');
+  let raf;
+  wrap.addEventListener('scroll',()=>{
+    cancelAnimationFrame(raf);
+    raf=requestAnimationFrame(()=>{
+      const step = wrap.scrollWidth / CITIES.length;
+      const i = Math.round(wrap.scrollLeft / step);
+      dots.forEach((d,k)=>d.classList.toggle('on',k===Math.min(i,CITIES.length-1)));
+    });
+  },{passive:true});
+  /* 也可以点卡片直接跳到对应城市的行程 */
+  wrap.addEventListener('click',e=>{
+    const card=e.target.closest('.city-card'); if(!card) return;
+    const name=card.querySelector('.cname').textContent;
+    openCity(name); goTab(1);
+  });
+})();
+
+/* ---------- 导航栏滚动渐变 ---------- */
+const nav=$('#nav');
+window.addEventListener('scroll',()=>nav.classList.toggle('solid',window.scrollY>40),{passive:true});
+
+/* ---------- Tab 切换 ---------- */
+function goTab(i){
+  $$('.panel').forEach((p,k)=>p.classList.toggle('active',k===i));
+  $$('#tabbar .tab').forEach((t,k)=>t.classList.toggle('active',k===i));
+  if(i===1){
+    initMap();                                                  // 首次进「这样玩」才初始化地图
+    if(amapOK){ setTimeout(()=>{ try{ amap&&amap.resize&&amap.resize(); }catch(e){} },350); }
+  }
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+$('#tabbar').addEventListener('click',e=>{
+  const t=e.target.closest('.tab'); if(t) goTab(+t.dataset.i);
+});
+
+/* =========================================================================
+   Tab 1 · 准备清单（localStorage 持久化）
+   ========================================================================= */
+const LS='chufalemo.v1';
+let st = {checked:{}, custom:{}, removed:{}};
+try{ Object.assign(st, JSON.parse(localStorage.getItem(LS)||'{}')); }catch(e){}
+const save = ()=>{ try{ localStorage.setItem(LS, JSON.stringify(st)); }catch(e){} };
+const keyOf = (gid,txt)=> gid+'|'+txt;
+
+/* 取某个分组当前的全部条目（默认 + 自定义 - 已删除） */
+function itemsOf(g){
+  const def = CHECKLIST.find(x=>x.id===g.id).items;
+  const cus = st.custom[g.id]||[];
+  return def.concat(cus).filter(t=>!st.removed[keyOf(g.id,t)]);
+}
+function renderCheck(){
+  $('#checkRoot').innerHTML = CHECKLIST.map(g=>{
+    const rows = itemsOf(g).map(t=>{
+      const parts = t.split('|');
+      const k = keyOf(g.id,t);
+      const done = !!st.checked[k];
+      return `<li class="item${done?' done':''}" data-k="${esc(k)}">
+        <span class="box"></span>
+        <span class="txt">${esc(parts[0])}${parts[1]?`<small>${esc(parts[1])}</small>`:''}</span>
+        <button class="del" aria-label="删除">×</button>
+      </li>`;
+    }).join('');
+    return `<div class="group" data-g="${g.id}">
+      <button class="group-head" type="button">
+        <span class="gicon">${g.icon}</span>
+        <span class="gname">${esc(g.name)}</span>
+        <span class="gcount"></span>
+        <span class="chev">▾</span>
+      </button>
+      <div class="group-body">
+        <ul style="list-style:none;margin:0;padding:0 0 2px">${rows}</ul>
+        <div class="add-row">
+          <input type="text" placeholder="添加一项…" maxlength="40">
+          <button type="button" aria-label="添加">＋</button>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+  updateProgress();
+}
+function updateProgress(){
+  let total=0, done=0;
+  CHECKLIST.forEach(g=>{
+    const list=itemsOf(g); let gd=0;
+    list.forEach(t=>{ if(st.checked[keyOf(g.id,t)]) {gd++; done++;} });
+    total+=list.length;
+    const box=$(`.group[data-g="${g.id}"]`); if(!box) return;
+    box.querySelector('.gcount').textContent = gd+' / '+list.length;
+  });
+  $('#progText').innerHTML = '已完成 <b>'+done+'</b> / '+total;
+  $('#progBar').style.width = total? (done/total*100)+'%' : '0%';
+}
+$('#checkRoot').addEventListener('click',e=>{
+  const head=e.target.closest('.group-head');
+  if(head){ head.parentElement.classList.toggle('collapsed'); return; }
+
+  const del=e.target.closest('.del');
+  if(del){
+    const li=del.closest('.item'), k=li.dataset.k;
+    const gid=k.split('|')[0], txt=k.slice(gid.length+1);
+    /* 自定义条目直接删掉；默认条目记入 removed，避免刷新后又冒出来 */
+    st.removed[k]=1; delete st.checked[k];
+    if(st.custom[gid]) st.custom[gid]=st.custom[gid].filter(x=>x!==txt);
+    save(); renderCheck(); return;
+  }
+
+  const li=e.target.closest('.item');
+  if(li){
+    const k=li.dataset.k;
+    if(st.checked[k]) delete st.checked[k]; else st.checked[k]=1;
+    li.classList.toggle('done'); save(); updateProgress(); return;
+  }
+
+  const add=e.target.closest('.add-row button');
+  if(add || (e.target.tagName==='INPUT' && e.key==='Enter')) doAdd(e.target.closest('.add-row'));
+});
+$('#checkRoot').addEventListener('keydown',e=>{
+  if(e.target.tagName==='INPUT' && e.key==='Enter'){
+    const row=e.target.closest('.add-row'); if(row) doAdd(row);
+  }
+});
+function doAdd(row){
+  const inp=row.querySelector('input');
+  const v=inp.value.trim(); if(!v) return;
+  const gid=row.closest('.group').dataset.g;
+  (st.custom[gid]=st.custom[gid]||[]).push(v);
+  inp.value=''; save(); renderCheck();
+  toast('已添加到「'+CHECKLIST.find(g=>g.id===gid).name+'」');
+}
+$('#resetBtn').addEventListener('click',()=>{
+  if(!confirm('确定要清空所有勾选状态吗？\n（自己添加的条目会保留）')) return;
+  st.checked={}; st.removed={}; save(); renderCheck(); toast('已重置');
+});
+renderCheck();
+
+/* =========================================================================
+   Tab 2 · 路线地图
+   ========================================================================= */
+const routeCities = TRIP.route.slice(0,-1).map(n=>CITIES.find(c=>c.name===n));
+
+/* ---------- 方案 B：手绘仿地图风格 SVG（无 Key 时的降级，始终可用） ---------- */
+function buildSvgMap(){
+  const W=420,H=540,PX=64,PY=72,MIN=92;
+  const pts = routeCities.map(c=>({name:c.name}));
+  routeCities.forEach((c,i)=>{ pts[i].lng=c.lng; pts[i].lat=c.lat; });
+
+  const lngs=pts.map(p=>p.lng), lats=pts.map(p=>p.lat);
+  const minL=Math.min(...lngs), maxL=Math.max(...lngs);
+  const minA=Math.min(...lats), maxA=Math.max(...lats);
+  pts.forEach(p=>{
+    p.gx = PX + (p.lng-minL)/((maxL-minL)||1)*(W-2*PX);
+    p.gy = PY + (maxA-p.lat)/((maxA-minA)||1)*(H-2*PY);
+    p.x=p.gx; p.y=p.gy;
+  });
+  /* 距离太近的城市互相推开一点，避免标记叠在一起 */
+  for(let it=0;it<80;it++){
+    let moved=false;
+    for(let i=0;i<pts.length;i++)for(let j=i+1;j<pts.length;j++){
+      const a=pts[i],b=pts[j]; let dx=b.x-a.x,dy=b.y-a.y,d=Math.hypot(dx,dy)||.01;
+      if(d<MIN){ const push=(MIN-d)/2,ux=dx/d,uy=dy/d;
+        a.x-=ux*push;a.y-=uy*push;b.x+=ux*push;b.y+=uy*push;moved=true; }
+    }
+    if(!moved) break;
+  }
+  pts.forEach(p=>{ p.x=Math.min(Math.max(p.x,46),W-46); p.y=Math.min(Math.max(p.y,52),H-52); });
+
+  /* 背景：奶白 + 浅绿道路网格 */
+  let grid='';
+  for(let x=30;x<W;x+=38) grid+=`<line x1="${x}" y1="0" x2="${x}" y2="${H}" stroke="#A8C4B4" stroke-width="1" opacity=".16"/>`;
+  for(let y=28;y<H;y+=38) grid+=`<line x1="0" y1="${y}" x2="${W}" y2="${y}" stroke="#A8C4B4" stroke-width="1" opacity=".16"/>`;
+  grid+=`<line x1="0" y1="${H*0.42}" x2="${W}" y2="${H*0.36}" stroke="#A8C4B4" stroke-width="3" opacity=".2"/>`;
+  grid+=`<line x1="40" y1="${H}" x2="${W-60}" y2="0" stroke="#A8C4B4" stroke-width="3" opacity=".18"/>`;
+  /* 海面：右下角一块极浅绿 */
+  const sea=`<path d="M${W} ${H-150} C ${W-90} ${H-120}, ${W-130} ${H-60}, ${W} ${H} Z" fill="#E8F0EB" opacity=".7"/>`;
+
+  const dPath = pts.map((p,i)=>(i?'L':'M')+p.x.toFixed(1)+' '+p.y.toFixed(1)).join(' ');
+  /* 引线：真实经纬度位置 ↔ 为避让而挪动后的标记位置 */
+  let lead='';
+  pts.forEach(p=>{ if(Math.hypot(p.x-p.gx,p.y-p.gy)>6)
+    lead+=`<line x1="${p.gx.toFixed(1)}" y1="${p.gy.toFixed(1)}" x2="${p.x.toFixed(1)}" y2="${p.y.toFixed(1)}" stroke="#A8C4B4" stroke-width="1" stroke-dasharray="2 3" opacity=".7"/>`;
+  });
+
+  /* 比折线段数多出来的那条交通（返程）单独画一条向左弯的虚线，避免和去程折线重叠 */
+  let retPath='', retMid=null;
+  if(LINES.length >= pts.length){
+    const A=pts[0], B=pts[pts.length-1];
+    const mx=(A.x+B.x)/2, my=(A.y+B.y)/2;
+    let px=-(B.y-A.y), py=(B.x-A.x);                 /* 法向量 */
+    const len=Math.hypot(px,py)||1; px=px/len; py=py/len;
+    if(px>0){ px=-px; py=-py; }                      /* 让控制点统一朝左偏 */
+    const cx=mx+px*115, cy=my+py*115;
+    retPath=`<path d="M${B.x.toFixed(1)} ${B.y.toFixed(1)} Q${cx.toFixed(1)} ${cy.toFixed(1)} ${A.x.toFixed(1)} ${A.y.toFixed(1)}"
+      stroke="#A8C4B4" stroke-width="2.5" fill="none" stroke-dasharray="4 6" opacity=".8"/>`;
+    retMid={ x:(B.x+2*cx+A.x)/4, y:(B.y+2*cy+A.y)/4 };   /* 二次贝塞尔曲线的中点 */
+  }
+
+  /* 交通徽章放在每段中点 */
+  const badges = LINES.map((L,i)=>{
+    let mx,my;
+    if(i < pts.length-1){
+      const a=pts[i], b=pts[i+1];
+      mx=(a.x+b.x)/2; my=(a.y+b.y)/2;
+    }else if(retMid){
+      mx=retMid.x; my=retMid.y;
+    }else{
+      mx=pts[0].x; my=Math.min(pts[0].y+66,H-52);
+    }
+    return `<button class="badge" data-line="${i}" style="left:${(mx/W*100).toFixed(2)}%;top:${(my/H*100).toFixed(2)}%">
+      <span class="cir">${L.icon}</span><span class="t">${esc(L.times)}</span></button>`;
+  }).join('');
+
+  const nodes = pts.map(p=>
+    `<button class="node" data-city="${esc(p.name)}" style="left:${(p.x/W*100).toFixed(2)}%;top:${(p.y/H*100).toFixed(2)}%">
+      <span class="dot">📍</span><span class="lbl">${esc(p.name)}</span></button>`).join('');
+
+  $('#svgMap').innerHTML =
+    `<svg class="map-svg" viewBox="0 0 ${W} ${H}">
+      <rect width="${W}" height="${H}" fill="#FCFDFC"/>
+      ${sea}${grid}${lead}${retPath}
+      <path d="${dPath}" stroke="#E8F0EB" stroke-width="6" fill="none" stroke-linecap="round"/>
+      <path class="route-flow" d="${dPath}"/>
+    </svg>
+    <div class="layer">${nodes}${badges}<div class="bubble" id="bubble"></div></div>`;
+}
+
+/* ---------- 方案 A：高德地图（填了 Key 才会加载） ---------- */
+
+/* 地点信息窗：点地图上的景点/住宿小圆点时弹出，里面有个「在高德地图中查看」按钮 */
+let poiWin=null;
+function showPoiWin(map,name,lng,lat,desc){
+  const html=`<div style="min-width:160px;max-width:220px">
+    <div style="font-size:14px;font-weight:700;color:#2F5D50">${esc(name)}</div>
+    ${desc?`<div style="font-size:12px;color:#7A8B83;margin-top:4px;line-height:1.5">${esc(desc)}</div>`:''}
+    <button class="poi-go" data-ll="${lng},${lat}" data-nm="${esc(name)}"
+      style="margin:9px 0 2px;width:100%;min-height:38px;justify-content:center;font-size:13px">看地图 ›</button>
+  </div>`;
+  if(!poiWin) poiWin=new AMap.InfoWindow({offset:new AMap.Pixel(0,-12)});
+  poiWin.setContent(html);
+  poiWin.open(map,[lng,lat]);
+}
+
+function buildAMap(){
+  const map=new AMap.Map('amapBox',{
+    zoom:6.4, viewMode:'2D',
+    center:[(116.41+119.30)/2,(39.90+24.48)/2],
+    /* 想更贴配色，去高德控制台「自定义地图样式」做一个绿调样式，把下面的 id 换掉即可 */
+    mapStyle:'amap://styles/whitesmoke'
+  });
+  amap = map;
+  map.on('complete',()=>{                 /* 瓦片真正渲染出来才算成功 */
+    amapOK = true;
+    if(amapTimer){ clearTimeout(amapTimer); amapTimer=null; }
+    if(mapModeAm) showAMap(); else showSvg('手绘示意图');
+  });
+  const path=routeCities.map(c=>[c.lng,c.lat]);
+  map.add(new AMap.Polyline({path,borderWeight:1,strokeWeight:4,strokeColor:'#6B9E86',
+    strokeOpacity:.9,strokeStyle:'dashed',lineJoin:'round'}));
+  routeCities.forEach(c=>{
+    const m=new AMap.Marker({
+      position:[c.lng,c.lat], offset:new AMap.Pixel(-16,-16), anchor:'center',
+      content:`<div style="width:32px;height:32px;border-radius:50%;background:#fff;border:2.5px solid #6B9E86;
+        display:flex;align-items:center;justify-content:center;font-size:14px;box-shadow:0 2px 12px rgba(47,93,80,.18)">📍</div>
+        <div style="margin-top:3px;font-size:12px;color:#2F5D50;background:rgba(255,255,255,.9);
+        padding:1px 7px;border-radius:999px;white-space:nowrap">${c.name}</div>`
+    });
+    m.on('click',()=>openCity(c.name)); map.add(m);
+  });
+
+  /* 景点 + 住宿逐个打点（只有填了 lng/lat 的才会出现），点一下弹信息窗，可唤起高德地图 */
+  CITIES.forEach(c=>{
+    (c.sights||[]).forEach(s=>{
+      if(s.lng===undefined||s.lat===undefined) return;
+      const m=new AMap.Marker({
+        position:[s.lng,s.lat], offset:new AMap.Pixel(-8,-8), anchor:'center',
+        content:`<div style="width:15px;height:15px;border-radius:50%;background:#6B9E86;border:2px solid #fff;
+          box-shadow:0 1px 6px rgba(47,93,80,.35)"></div>`
+      });
+      m.on('click',()=>showPoiWin(map,'📍 '+s.n,s.lng,s.lat,s.d));
+      map.add(m);
+    });
+    if(c.hotelLL){
+      const m=new AMap.Marker({
+        position:c.hotelLL, offset:new AMap.Pixel(-9,-9), anchor:'center',
+        content:`<div style="width:18px;height:18px;border-radius:50%;background:#C9A87C;border:2px solid #fff;
+          box-shadow:0 1px 6px rgba(47,93,80,.35);display:flex;align-items:center;justify-content:center;font-size:9px">🏨</div>`
+      });
+      m.on('click',()=>showPoiWin(map,'🏨 '+c.hotel,c.hotelLL[0],c.hotelLL[1],'这一站住的地方'));
+      map.add(m);
+    }
+  });
+
+  const addBadge=(L,lng,lat)=>{
+    const m=new AMap.Marker({
+      position:[lng,lat], offset:new AMap.Pixel(-19,-19), anchor:'center',
+      content:`<div style="width:38px;height:38px;border-radius:50%;background:#E8F0EB;border:1.5px solid #A8C4B4;
+        display:flex;align-items:center;justify-content:center;font-size:17px">${L.icon}</div>
+        <div style="margin-top:2px;font-size:11px;color:#2F5D50;background:rgba(255,255,255,.9);
+        padding:1px 7px;border-radius:999px;white-space:nowrap">${L.times}</div>`
+    });
+    m.on('click',()=>toast(L.icon+' '+L.from+' → '+L.to+'：'+L.text+'。'+L.detail));
+    map.add(m);
+  };
+  LINES.forEach((L,i)=>{
+    const a=routeCities[i], b=routeCities[i+1];
+    if(!b){                                   /* 最后一条 = 返程，画一条浅色虚线回出发地 */
+      const s=routeCities[0], e=routeCities[routeCities.length-1];
+      map.add(new AMap.Polyline({path:[[e.lng,e.lat],[s.lng,s.lat]],strokeWeight:2,
+        strokeColor:'#A8C4B4',strokeOpacity:.85,strokeStyle:'dashed'}));
+      addBadge(L,(e.lng+s.lng)/2,(e.lat+s.lat)/2);
+      return;
+    }
+    addBadge(L,(a.lng+b.lng)/2,(a.lat+b.lat)/2);
+  });
+  map.setFitView();
+}
+
+/* ---------- 手绘图 / 高德地图 两种状态互切 ---------- */
+let amap=null, amapOK=false, amapStarted=false, mapModeAm=true, amapTimer=null;
+function setMode(t){ const el=$('#mapMode'); if(el) el.textContent=t; }
+function showSvg(msg){
+  mapModeAm=false;
+  $('#amapBox').classList.remove('on');
+  $('#svgMap').style.display='';
+  setMode(msg||'手绘示意图');
+  const t=$('#mapToggle'); if(t){ t.hidden=!amapOK; t.textContent='⇄ 换成高德地图'; }
+}
+function showAMap(){
+  if(!amapOK){ toast('地图还没加载完，先用手绘示意图'); return; }
+  mapModeAm=true;
+  $('#svgMap').style.display='none';
+  $('#amapBox').classList.add('on');
+  setMode('高德地图');
+  $('#mapToggle').textContent='⇄ 换成手绘示意图';
+  /* 容器从隐藏变可见时高德必须 resize 一次，否则还是空白 */
+  setTimeout(()=>{ try{ amap && amap.resize && amap.resize(); }catch(e){} },150);
+}
+
+/* 关键：地图必须等 Tab2 真正显示时才初始化。
+   在隐藏的容器里初始化，高德拿到的是 0 宽高，渲染出来就是一片空白。 */
+function initMap(){
+  buildSvgMap();                                   // 手绘图先备好，永远有底，不会白屏
+  if(!AMAP_KEY || AMAP_KEY==='YOUR_KEY_HERE'){ showSvg('手绘示意图'); return; }
+  if(amapStarted) return;
+  amapStarted=true;
+  if(AMAP_SECURITY) window._AMapSecurityConfig={securityJsCode:AMAP_SECURITY};
+  setMode('正在加载地图…');
+  const s=document.createElement('script');
+  s.src=`https://webapi.amap.com/maps?v=2.0&key=${AMAP_KEY}`;
+  s.onerror=()=>showSvg('手绘示意图（地图加载失败）');
+  s.onload=()=>{
+    if(typeof AMap==='undefined'){ showSvg('手绘示意图（地图未就绪）'); return; }
+    try{ buildAMap(); }catch(err){ showSvg('手绘示意图（初始化失败）'); return; }
+    /* 超过 MAP_TIMEOUT 还没渲染出瓦片就当失败，自动退回手绘图 */
+    amapTimer=setTimeout(()=>{ if(!amapOK) showSvg('手绘示意图（加载超时）'); }, MAP_TIMEOUT);
+  };
+  document.head.appendChild(s);
+}
+initMap();     // 页面加载时只画手绘图；高德等切到「这样玩」这一屏再初始化
+
+$('#mapToggle').addEventListener('click',()=>{ mapModeAm ? showSvg('手绘示意图') : showAMap(); });
+
+/* ---------- 交通气泡 ---------- */
+function showBubble(html, x, y, W, H){
+  const b=$('#bubble'); if(!b) return;
+  b.innerHTML=html;
+  b.style.left=(x/W*100)+'%'; b.style.top=(y/H*100-4)+'%';
+  b.classList.add('on');
+}
+(function bindMapEvents(){
+  const inner=$('#mapInner');
+  inner.addEventListener('click',e=>{
+    const node=e.target.closest('.node');
+    if(node){ inner.querySelectorAll('.node').forEach(n=>n.classList.remove('on'));
+      node.classList.add('on'); openCity(node.dataset.city); return; }
+    const bg=e.target.closest('.badge');
+    if(bg){
+      const i=+bg.dataset.line, L=LINES[i];
+      const b=$('#bubble');
+      const wasOn = b.classList.contains('on') && b.dataset.for==='line'+i;
+      b.classList.remove('on');
+      if(wasOn) return;
+      b.dataset.for='line'+i;
+      const rect=inner.getBoundingClientRect();
+      showBubble(`<b>${L.icon} ${esc(L.from)} → ${esc(L.to)}</b><p>${esc(L.detail)}</p>`,
+        parseFloat(bg.style.left), parseFloat(bg.style.top), 100, 100);
+      return;
+    }
+    const bb=$('#bubble'); if(bb && !e.target.closest('#bubble')) bb.classList.remove('on');
+  });
+})();
+
+/* ---------- 城市行程卡片 ---------- */
+function openCity(name){
+  const c=CITIES.find(x=>x.name===name); if(!c) return;
+  const eats=c.eats.length?`<div class="sec-title">🍽 吃什么</div>`+c.eats.map(e=>eatPill(e,c.name)).join('<br>') : '';
+  const hotel=(c.hotel&&c.hotelLL)?`<div class="sec-title">🏨 住哪儿</div><ul class="sight-list">`+
+      poiRow(c.hotel,c.hotelLL[0],c.hotelLL[1],'点一下在高德地图里看位置（可以先收藏）')+`</ul>`
+      +eatPill({n:c.hotel},c.name) : (c.hotel?`<div class="sec-title">🏨 住哪儿</div>${eatPill({n:c.hotel},c.name)}`:'');
+  const sights=c.sights.length?`<div class="sec-title">👀 玩什么 · 点任一行看地图</div><ul class="sight-list">`+
+      c.sights.map(s=>poiRow(s.n,s.lng,s.lat,s.d)).join('')+`</ul>` : '';
+
+  $('#cityDetail').innerHTML = `
+    <div class="cd-head"><span class="cd-name">${esc(c.name)}</span><span class="cd-stay">${esc(c.alt?'出发地':c.stay)}</span>
+      <button class="poi-go" data-ll="${c.lng},${c.lat}" data-nm="${esc(c.name)}">📍 看城市地图</button></div>
+    <div class="card-head" style="margin:0 0 10px"><h3 style="font-size:15px">💬 提示</h3></div>
+    <p style="margin:0;font-size:14px;color:var(--text-sub);line-height:1.6">${esc(c.note || c.tag+'。这一段走得慢一点，别赶行程。')}</p>
+    ${sights}${eats}${hotel}`;
+  $('#cityDetail').scrollIntoView({behavior:'smooth',block:'nearest'});
+}
+/* 点评胶囊按钮：真链接 + target=_blank，手机上点一下就能跳（不会被弹窗拦截） */
+function eatPill(e, city){
+  return `<span class="pill-wrap"><a class="pill" href="${dpLink(e.n)}" target="_blank" rel="noopener"
+    data-shop="${esc(e.n)}" data-city="${esc(city||'')}">${esc(e.n)}<span class="arw">›</span></a><span class="pill-i"
+    data-tip="点店名：可用点评 App 或高德地图打开">i</span></span>
+    ${e.d?`<span style="font-size:12.5px;color:var(--text-sub);margin-left:6px">${esc(e.d)}</span>`:''}`;
+}
+/* 有坐标的地点行：整行可点，点了唤起高德地图看这个点 */
+function poiRow(name, lng, lat, desc, icon){
+  const has = (lng!==undefined && lat!==undefined);
+  return `<li class="sight-row${has?' tappable':''}" data-ll="${has?lng+','+lat:''}" data-nm="${esc(name)}">
+    ${has?'<span class="pin">📍</span>':''}<b>${esc(name)}</b>
+    ${has?'<span class="poi-go" data-ll="'+lng+','+lat+'" data-nm="'+esc(name)+'">看地图 ›</span>':''}
+    <span class="d">${esc(desc||'')}</span></li>`;
+}
+openCity('福州');
+
+/* ---------- 行程一览 ---------- */
+$('#dayList').innerHTML = DAYS.map((d,i)=>
+  `<button class="day-row" data-day="${i}">
+     <span class="d">${esc(dayDate(i))}</span>
+     <span class="c">Day${d.n}</span>
+     <span class="t">${d.trans} · ${esc(d.theme)}</span>
+   </button>`).join('');
+$('#dayList').addEventListener('click',e=>{
+  const r=e.target.closest('.day-row'); if(!r) return;
+  goTab(2); setTimeout(()=>openDay(+r.dataset.day),260);
+});
+
+/* =========================================================================
+   Tab 3 · 时间轴
+   ========================================================================= */
+$('#timeline').innerHTML = DAYS.map((d,i)=>{
+  const blocks = d.blocks.map(b=>`
+    <div class="block"><span class="lb">${b.icon} ${b.t}</span>
+      <ul>${b.list.map(x=>`<li>${esc(x)}</li>`).join('')}</ul>
+    </div>`).join('');
+  const eats = d.eats && d.eats.length ? `<div class="eat-row">
+      <div class="tip">🍽 这一天吃什么 —— 点店名跳转大众点评</div>
+      ${d.eats.map(e=>eatPill(e,d.city)).join('<br>')}
+    </div>` : '';
+  return `<div class="tl-item" id="day-${i}">
+    <button class="tl-card" style="width:100%;text-align:left;padding:0;display:block">
+      <div class="tl-head">
+        <span class="tl-day">Day${d.n}</span>
+        <span class="tl-mid">
+          <span class="tl-city">${esc(d.city)} <small>${esc(dayDate(i))}</small></span>
+          <span class="tl-theme">${d.trans} · ${esc(d.theme)}</span>
+        </span>
+        <span class="tl-chev">›</span>
+      </div>
+    </button>
+    <div class="tl-body">${blocks}${eats}</div>
+  </div>`;
+}).join('');
+$('#timeline').addEventListener('click',e=>{
+  const it=e.target.closest('.tl-item'); if(!it) return;
+  if(e.target.closest('.pill')||e.target.closest('.pill-i')) return;
+  it.classList.toggle('open');
+});
+function openDay(i){
+  const it=$('#day-'+i); if(!it) return;
+  it.classList.add('open');
+  it.scrollIntoView({behavior:'smooth',block:'center'});
+}
+$('#expandAll').onclick =()=>$$('#timeline .tl-item').forEach(x=>x.classList.add('open'));
+$('#collapseAll').onclick=()=>$$('#timeline .tl-item').forEach(x=>x.classList.remove('open'));
+
+/* =========================================================================
+   跳转 1：大众点评
+   胶囊按钮本身就是 <a href target="_blank">，点一下是浏览器原生跳转，
+   不会被手机浏览器的弹窗拦截（之前把 window.open 放进 setTimeout 里，
+   用户手势已经失效，所以手机上点了没反应）。
+   ========================================================================= */
+/* openAMap / dpLink / dpSearch 都定义在脚本顶部「跳转工具」区，这里不重复定义 */
+
+document.addEventListener('click',e=>{
+  /* ⓘ 小提示图标：只弹提示，不跳转 */
+  const tip=e.target.closest('.pill-i');
+  if(tip){ e.preventDefault(); e.stopPropagation(); toast(tip.dataset.tip||'将跳转大众点评搜索'); return; }
+
+  /* 「📍 高德」按钮（景点信息窗 / 城市卡片里的那颗按钮） */
+  const go=e.target.closest('.poi-go');
+  if(go){ e.preventDefault(); e.stopPropagation();
+    const ll=(go.dataset.ll||'').split(',');
+    if(ll.length===2 && ll[0]) openAMap(ll[0],ll[1],go.dataset.nm||'目的地');
+    return;
+  }
+
+  /* 城市卡片里点景点 / 住宿这一整行 → 直接唤起高德看这个地点 */
+  const row=e.target.closest('.sight-row');
+  if(row){ e.stopPropagation();
+    const ll=(row.dataset.ll||'').split(',');
+    if(ll.length===2 && ll[0]) openAMap(ll[0],ll[1],row.dataset.nm||'目的地');
+    else toast('这个地点还没填坐标，填了 lng/lat 才能唤起高德');
+    return;
+  }
+
+  /* 点评胶囊：手机弹选择面板；桌面直接新窗口打开网页版 */
+  const p=e.target.closest('.pill');
+  if(p){
+    const n=p.dataset.shop;
+    e.stopPropagation();
+    if(SHOP_SHEET && /iPhone|iPad|Android|Mobile/i.test(navigator.userAgent)){
+      e.preventDefault();                 // 拦住 <a> 的直跳，改用面板（直跳在手机上经常落到登录页）
+      openShopSheet(n, p.dataset.city);
+      return;
+    }
+    toast('正在跳转大众点评搜索「'+n+'」');
+  }
+});
+
+/* 选择面板的交互 */
+(function(){
+  const mask=$('#sheet');
+  if(!mask) return;
+  mask.addEventListener('click',e=>{
+    if(e.target===mask){ mask.classList.remove('on'); return; }   // 点遮罩关掉
+    const btn=e.target.closest('.s-btn'); if(!btn) return;
+    const act=btn.dataset.act, name=mask.dataset.shop||'', city=mask.dataset.city||'';
+    mask.classList.remove('on');
+    if(act==='cancel') return;
+    if(act==='amap'){ openAMapSearch(name,city); return; }
+    if(act==='app'){
+      /* 唤起 App：同一次点击手势内执行，不会被浏览器拦截 */
+      let left=false;
+      const onHide=()=>{ left=true; };
+      document.addEventListener('visibilitychange',onHide,{once:true});
+      location.href = dpAppLink(name);
+      /* 1.5 秒后页面还在这儿 = 没装点评 App → 自动改用高德地图搜这家店
+         （同样是改 location.href，属于普通导航，不会被当成弹窗拦掉） */
+      setTimeout(()=>{
+        document.removeEventListener('visibilitychange',onHide);
+        if(!left && !document.hidden){
+          toast('没检测到点评 App，改用高德地图搜索');
+          location.href = amapSearchUrl(name,city);
+        }
+      },1500);
+    }
+  });
+})();
+</script>
+</body>
+</html>
