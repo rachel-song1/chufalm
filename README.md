@@ -10,8 +10,8 @@
 打开 `index.html`，搜索 **`AMAP_KEY`**（在「数据区」末尾）：
 
 ```js
-const AMAP_KEY      = '2afbbfa869c025e099693057f16b45b0';      // 已填好：高德 Web 端(JS API) Key
-const AMAP_SECURITY = 'c4b16d3d112cb7d72a36dd6a7e31da03';      // 已填好：安全密钥 securityJsCode
+const AMAP_KEY      = '';      // 已填好：高德 Web 端(JS API) Key
+const AMAP_SECURITY = '';      // 已填好：安全密钥 securityJsCode
 const MAP_TIMEOUT   = 6000;   // 6 秒没渲染完就自动退回手绘图
 ```
 
@@ -94,24 +94,6 @@ const CITY_IMAGES = {
 - **`AMAP_KEY` / `AMAP_SECURITY`** 见第 1 条。
 
 ---
-
-## 4. 怎么部署到网上
-
-### 方案 A · GitHub Pages（免费、稳定）
-1. 在 GitHub 新建仓库（Public），把 `index.html` 拖进去（**文件名必须是 `index.html`**）。
-2. 仓库 → **Settings → Pages → Build and deployment → Source 选 `Deploy from branch`**，分支选 `main`，目录选 `/ (root)`，Save。
-3. 等 1–2 分钟，访问 `https://你的用户名.github.io/仓库名/`。
-4. 之后每次改完直接在网页上传新版 `index.html`，一分钟左右自动生效。
-
-### 方案 B · Vercel（不用写命令行也可以）
-1. 打开 [vercel.com](https://vercel.com) → GitHub 登录 → **Add New → Project** → 导入刚才那个仓库 → Deploy。
-2. 不想用 Git 也可以：本地建个文件夹，里面只放 `index.html`，然后电脑装 Vercel CLI 上传：
-   ```bash
-   npm i -g vercel
-   cd 文件夹目录
-   vercel --prod
-   ```
-3. 部署完会给你一个 `xxx.vercel.app` 的网址，可以直接丢到微信里打开。
 
 ### 部署后的小提示
 - 用手机发给旅伴时，直接在微信里打开链接就行；iOS Safari 点「分享 → 添加到主屏幕」，用起来跟 App 一样。
